@@ -45,6 +45,23 @@ def read_config(config_name: str) -> configparser.ConfigParser:
     return parser
 
 
+def update_config(config_name: str, section: str, param: str, value: str) -> None:
+    """
+    Update a parameter in config file
+
+    Args:
+        config_name (str): Config file name
+        section (str): The section in which the parameter is in
+        param (str): Parameter name
+        value (str): Updated parameter value
+    """
+    parser = read_config(config_name)
+    parser[section][param] = value
+    config_dir_path = get_dir_path("configs")
+    config_path = os.path.join(config_dir_path, config_name)
+    with open(config_path, "w") as conf:
+        parser.write(conf)
+
 def init_logger(name: str) -> logging.Logger:
     """
     Initializes logger object

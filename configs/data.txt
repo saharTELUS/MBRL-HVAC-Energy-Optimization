@@ -1,0 +1,37 @@
+ # This file is only intended to track the columns required for the HVAC dataset
+# Please delete this once this feature branch is ready 
+
+[pwr]
+pwr
+time_ori_pwr
+time_round_pwr
+
+[hvac]
+indoor_temp
+outdoor_temp
+supply_temp
+indoor_humidity
+fan_speed
+compressor_status
+heater_status
+time_ori_hvac
+time_round_hvac
+freecool_status
+
+[all]
+index:
+    time_round_hvac
+columns:
+    indoor_temp
+    outdoor_temp
+    supply_temp
+    indoor_humidity
+    fan_speed
+    compressor_status
+    heater_status
+    time_ori_hvac
+    freecool_status
+    pwr
+    time_ori_pwr
+    time_round_pwr
+    time_gap
