@@ -9,6 +9,7 @@ import numpy as np
 from src.util import init_logger, create_dirs, read_config
 from src.agent import Agent
 from src.environment import Environment
+from src.params import TransitionParams
 
 
 def main(training_config_name: str = "training_params.cfg") -> None:
@@ -29,6 +30,12 @@ def main(training_config_name: str = "training_params.cfg") -> None:
     outdoor_temp_lo = float(parser["training_env"]["outdoor_temp_low"])
     outdoor_temp_hi = float(parser["training_env"]["outdoor_temp_high"])
     outdoor_temp_step = float(parser["training_env"]["outdoor_temp_step"])
+
+    threshold = parser["training_env"]["threshold"]
+
+    # data.csv does not exist yet, only putting it here as a placeholder
+    transition_params = TransitionParams("data.csv", threshold)
+    transition_params.compute_all()
 
     for temp_outdoor_nominal in np.arange(
         outdoor_temp_lo, outdoor_temp_hi, outdoor_temp_step
