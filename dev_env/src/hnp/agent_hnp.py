@@ -31,10 +31,6 @@ class ObservationWrapper(gym.ObservationWrapper):
         return np.clip(obs[self.obs_to_keep], self.lows, self.highs)
 
 class HNPAgent:
-    """
-    Reinforcement Learning Agent Class for learning the policy and the model
-    """
-
     def __init__(
         self,
         env,
@@ -43,30 +39,41 @@ class HNPAgent:
         high,
         initial_eps =  1,
         eps_annealing = 0.9,
-        eps_annealing_interval = 100000,
+        eps_annealing_interval = 10,
         learning_rate: float = 0.1,
         learning_rate_annealing: float = 0.9,
-        temp_step: float = 1.0,
+        learning_rate_annealing_interval = 10,
+        obs_discretization_steps = 1.0,
         gamma: float = 0.99,
-        theta: float = 1e-6,
-        n_iteration_long: int = 1000,
     ) -> None:
         """
+        Main HNP Agent Class
+
+        :param: env: Gym environment to train the agent on
+        :param: obs_mask: List of integers describing type of variables in the environment, 0 = slow moving continuous, 1 = fast moving continuous, 2 = discrete, ex: [0, 0, 1, 2]
+        :param: low: List of integers describing lower bound of all variables in environment, if variable is discrete then is disregarded
+        :param: high: List of integers describing upper bound of all variables in environment, if variable is discrete then is number of possible discrete values for that variable
+        :param: initial_eps: Initial epsilon to use for epsilon greedy policy
+        :param: eps_annealing: Float between 0 and 1 to multiply epsilon by every eps_annealing_interval timesteps
+        :param: eps_annealing_interval: Number of episodes after which epsilon is multiplied by eps_annealing
+        :param: learning_rate: Initial learning_rate to use for Q-Learning update
+        :param: learning_rate_annealing: Float between 0 and 1 to multiply learning_rate by every learning_rate_annealing_interval timesteps
+        :param: learning_rate_annealing_interval: Number of episodes after which learning_rate is multiplied by learning_rate_annealing
+        :param: obs_discretization_steps: List of integers describing discretization steps for continuous variables, if variable is discrete then is disregarded
+        :param: gamma: Discount factor for environment
         """
-        # 3 types --> discrete, continuous, slow continuous observations
-        # actions --> always discrete
-        # ASSUMES CONTINUOUS STATE SPACE AND DISCRETE ACTION SPACE
+
         self.env = env
 
-        self.temp_step = temp_step
         self.gamma = gamma
-        self.theta = theta
-        self.n_iteration_long = n_iteration_long
+
         self.eps = initial_eps
         self.eps_annealing = eps_annealing
         self.eps_annealing_interval = eps_annealing_interval
         self.learning_rate = learning_rate
         self.learning_rate_annealing = learning_rate_annealing
+        self.learning_rate_annealing_interval = learning_rate_annealing_interval
+
         self.low = low
         self.high = high
 
@@ -81,7 +88,7 @@ class HNPAgent:
         self.n_slow_cont = len(self.slow_continuous_idx)
         self.n_fast_discrete = len(self.fast_continuous_idx) + len(self.discrete_idx)
 
-        self.obs_steps = np.ones(len(self.low)) /20 # TODO: CHANGE THIS
+        self.obs_steps = obs_discretization_steps
         self.discretization_ticks = self.get_ticks(self.env.observation_space, self.obs_steps) 
 
         self.obs_space_shape = self.get_obs_shape()
@@ -99,27 +106,54 @@ class HNPAgent:
             self.all_portion_index_combos = np.array(np.meshgrid(*portion_index_matrix), dtype=int).T.reshape(-1, self.n_slow_cont)
 
     def transform_obs(self, obs):
+        '''
+        Get permuted observation
+        :param: obs: Original observation
+        '''
         return obs[self.permutation_idx]
 
     def make_qtb(self):
+        '''
+        Make and return Q table
+        '''
         return np.zeros((*self.obs_space_shape, self.act_space_shape))
         
     def make_vtb(self):
+        '''
+        Make and return V table
+        '''
         return np.zeros(self.obs_space_shape)
 
     def get_obs_shape(self):
+        '''
+        Get (modified) observation space shape
+        '''
         return tuple(list([len(ticks) for ticks in self.discretization_ticks]) + list(self.high[self.discrete_idx]))
 
     def get_act_shape(self):
+        '''
+        Get action space shape
+        '''
         return self.env.action_space.n
 
     def get_ticks(self, space, steps):
+        '''
+        Get ticks for continuous observations
+        '''
         return [np.arange(space.low[i], space.high[i] + steps[i], steps[i]) for i in self.to_discretize_idx]
 
     def obs_to_index_float(self, obs):
+        '''
+        Transform observation into index in V table (can have float index because we are using HNP)
+        '''
         return (obs - self.cont_low)/(self.cont_high - self.cont_low) * (np.array(self.vtb.shape[:len(self.cont_high)]) - 1)
     
     def choose_action(self, obs_index, mode="explore"):
+        '''
+        Choose action based on current V table index and mode
+        :param: obs_index: Current V table index
+        :param: mode: Current mode to use when acting, "explore" = epsilon greedy, "greedy" = fully greedy
+        '''
         if mode == "explore":
             if np.random.rand(1) < self.eps:
                 return self.env.action_space.sample()
@@ -129,6 +163,9 @@ class HNPAgent:
             return np.argmax(self.qtb[tuple(obs_index)])
 
     def get_vtb_idx_from_obs(self, obs):
+        '''
+        Get index in V table based on observation
+        '''
         obs = self.transform_obs(obs)
         cont_obs = obs[:len(self.to_discretize_idx)]
 
@@ -140,7 +177,9 @@ class HNPAgent:
 
 
     def get_next_value(self, obs):
-        # If change first 5 lines of this function also
+        '''
+        Get next value to use for Q learning target based on current observation
+        '''
         full_obs_index, cont_obs_index_floats = self.get_vtb_idx_from_obs(obs)
         if self.n_slow_cont == 0: # No HNP calculation needed
             return self.vtb[tuple(full_obs_index)], full_obs_index
@@ -166,8 +205,10 @@ class HNPAgent:
         
         return next_value, full_obs_index
     
-    def learn(self, n_episodes, horizon) -> None:
-        # n people, outdoor temperature, indoor temperature
+    def learn(self, n_episodes) -> None:
+        '''
+
+        '''
         obs = self.env.reset()
         prev_vtb_index, _ = self.get_vtb_idx_from_obs(obs)
         episode_reward = 0
@@ -198,8 +239,13 @@ class HNPAgent:
 
                 n_steps = 0
                 ep_n += 1
-                self.eps = self.eps * self.eps_annealing
-                self.learning_rate = self.learning_rate * self.learning_rate_annealing
+
+                if ep_n % self.eps_annealing_interval == 0:
+                    self.eps = self.eps * self.eps_annealing
+
+                if ep_n % self.learning_rate_annealing_interval == 0:
+                    self.learning_rate = self.learning_rate * self.learning_rate_annealing
+
                 episode_reward = 0
                 obs = self.env.reset()
     

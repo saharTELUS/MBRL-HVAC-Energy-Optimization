@@ -25,6 +25,6 @@ agent = HNPAgent(
     eps_annealing=config["hyperparams"]["eps_annealing"], 
     learning_rate_annealing=config["hyperparams"]["lr_annealing"])
 
-agent.learn(config["agent"]["config"]["num_episodes"], config["hyperparams"]["horizon"])
+agent.learn(config["agent"]["config"]["num_episodes"])
 agent.save_results()
 env.close()
