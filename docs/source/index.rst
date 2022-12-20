@@ -16,22 +16,18 @@ HNP addresses these concerns by combining the **interpretability and computation
 
 Use cases of HNP
 -----------------------------
-HNP was initially designed for **data center HVAC control**, where the slowly-changing continuous variable is the air temperature. However, it could easily be applied to other problems such as:
-* problem 1
-* problem 2
+HNP was initially designed for **data center HVAC control**, where the slowly-changing continuous variable is the air temperature. However, it could easily be applied to other problems such as HVAC control for office buildings.
 
 Features
 ------
-
+* Out-of-the-box implementation of an HNP agent
 
 Documentation
 ------
-- Getting Started with BeoBench
+- Getting Started with BeoBench (add link)
 - Getting Started with Sinergym
 
 License
 -------
 
-Indices and tables
-==================
 
