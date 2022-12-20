@@ -7,6 +7,9 @@ import os
 CONSTANT_NINF = -9e99
 
 class ObservationWrapper(gym.ObservationWrapper):
+    """
+    Wrapper class for BeoBench to only keep certain observations in the observation space
+    """
     def __init__(self, env, obs_to_keep, lows, highs, mask):
         super().__init__(env)
         self.env = env
@@ -23,14 +26,30 @@ class ObservationWrapper(gym.ObservationWrapper):
                 )
     
     def observation(self, obs):
-        if np.max(obs) > 1:
-            print("more than 0")
-        if np.min(obs) < 0:
-            print("less 0 ")
-        # modify obs
         return np.clip(obs[self.obs_to_keep], self.lows, self.highs)
 
 class HNPAgent:
+    '''
+        Main HNP Agent Class
+
+        :param: env: Gym environment to train the agent on
+        :param: obs_mask: List of integers describing type of variables in the environment:
+        0 = slow moving continuous
+        1 = fast moving continuous
+        2 = discrete, ex: [0, 0, 1, 2]
+        :param: low: List of integers describing lower bound of all variables in environment
+                     if variable is discrete then is disregarded
+        :param: high: List of integers describing upper bound of all variables in environment
+                      if variable is discrete then is number of possible discrete values for that variable
+        :param: initial_eps: Initial epsilon to use for epsilon greedy policy
+        :param: eps_annealing: Float between 0 and 1 to multiply epsilon by every eps_annealing_interval timesteps
+        :param: eps_annealing_interval: Number of episodes after which epsilon is multiplied by eps_annealing
+        :param: learning_rate: Initial learning_rate to use for Q-Learning update
+        :param: learning_rate_annealing: Float between 0 and 1 to multiply learning_rate by every learning_rate_annealing_interval timesteps
+        :param: learning_rate_annealing_interval: Number of episodes after which learning_rate is multiplied by learning_rate_annealing
+        :param: obs_discretization_steps: List of integers describing discretization steps for continuous variables, if variable is discrete then is disregarded
+        :param: gamma: Discount factor for environment
+        '''
     def __init__(
         self,
         env,
@@ -46,22 +65,6 @@ class HNPAgent:
         obs_discretization_steps = 1.0,
         gamma: float = 0.99,
     ) -> None:
-        """
-        Main HNP Agent Class
-
-        :param: env: Gym environment to train the agent on
-        :param: obs_mask: List of integers describing type of variables in the environment, 0 = slow moving continuous, 1 = fast moving continuous, 2 = discrete, ex: [0, 0, 1, 2]
-        :param: low: List of integers describing lower bound of all variables in environment, if variable is discrete then is disregarded
-        :param: high: List of integers describing upper bound of all variables in environment, if variable is discrete then is number of possible discrete values for that variable
-        :param: initial_eps: Initial epsilon to use for epsilon greedy policy
-        :param: eps_annealing: Float between 0 and 1 to multiply epsilon by every eps_annealing_interval timesteps
-        :param: eps_annealing_interval: Number of episodes after which epsilon is multiplied by eps_annealing
-        :param: learning_rate: Initial learning_rate to use for Q-Learning update
-        :param: learning_rate_annealing: Float between 0 and 1 to multiply learning_rate by every learning_rate_annealing_interval timesteps
-        :param: learning_rate_annealing_interval: Number of episodes after which learning_rate is multiplied by learning_rate_annealing
-        :param: obs_discretization_steps: List of integers describing discretization steps for continuous variables, if variable is discrete then is disregarded
-        :param: gamma: Discount factor for environment
-        """
 
         self.env = env
 
@@ -207,7 +210,7 @@ class HNPAgent:
     
     def learn(self, n_episodes) -> None:
         '''
-
+        Train the HNP agent for n_episodes episodes on self.env
         '''
         obs = self.env.reset()
         prev_vtb_index, _ = self.get_vtb_idx_from_obs(obs)
@@ -250,6 +253,13 @@ class HNPAgent:
                 obs = self.env.reset()
     
     def save_results(self):
+        '''
+        Save results accumulated during training:
+        - Q table
+        - Reward per episode
+        - Average reward per step per episode
+        - State visitation counts
+        '''
         today = date.today()
         day = today.strftime("%Y_%b_%d")
         now = dt.now()

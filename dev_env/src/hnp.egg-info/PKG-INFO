@@ -2,7 +2,7 @@ Metadata-Version: 1.0
 Name: hnp
 Version: 0.1
 Summary: Hyperspace Neighbor Penetration agent
-Home-page: #
+Home-page: https://github.com/VectorInstitute/MBRL-HVAC-Energy-Optimization/tree/thomas-dev/dev_env/src
 Author: Thomas Jiralerspong
 Author-email: thomasjiralerspong@gmail.com
 License: UNKNOWN

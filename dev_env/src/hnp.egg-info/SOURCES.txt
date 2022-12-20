@@ -1,5 +1,7 @@
 README.md
+pyproject.toml
 setup.py
+hnp/__init__.py
 hnp/agent_hnp.py
 hnp.egg-info/PKG-INFO
 hnp.egg-info/SOURCES.txt

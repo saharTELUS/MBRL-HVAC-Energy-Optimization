@@ -6,6 +6,6 @@ src/__pycache__/
 
 # Output files
 models/
-
+test_venv
 # MacOS files
 .DS_Store
