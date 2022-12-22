@@ -31,6 +31,7 @@ Follow the instructions [here](https://beobench.readthedocs.io/en/latest/getting
 Example Usage with BeoBench
 -------------
 Put the following in a file called `config.yaml`:
+
 .. code-block:: yaml
 
     agent:
