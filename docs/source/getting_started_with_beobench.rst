@@ -41,7 +41,7 @@ Put the following in a file called `config.yaml`:
             num_episodes: 50
     env:
     # gym framework from which we want use an environment
-    gym: ./dev_env
+    gym: sinergym
     # gym-specific environment configuration
     config:
         # sinergym environment name
